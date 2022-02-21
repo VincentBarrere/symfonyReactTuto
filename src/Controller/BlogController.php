@@ -22,29 +22,34 @@ class BlogController extends AbstractController
             "title" => "This is another post"
         ],
         [
-            'id' => 2,
+            'id' => 3,
             "slug" => "last-post",
             "title" => "This is last post"
         ]
     ];
 
-    #[Route("/", name: "blog_list")]
-    public function list()
+    #[Route("/{page}", name: "blog_list", defaults: ["page" => 5])]
+    public function list($page)
     {
-        return new JsonResponse(self::POSTS);
-    }
-    #[Route("/{id}", name: "blog_by_id")]
-    public function post($id)
-    {
-        return new JsonResponse(
-            array_search($id, array_column(self::POSTS, 'id'))
+        return $this->json(
+            [
+                'page' => $page,
+                'data' => self::POSTS
+            ]
         );
     }
-    #[Route("/{slug}", name: "blog_by_slug")]
+    #[Route("/post/{id}", name: "blog_by_id")]
+    public function post($id)
+    {
+        return $this->json(
+            self::POSTS[array_search($id, array_column(self::POSTS, 'id'))]
+        );
+    }
+    #[Route("/post/{slug}", name: "blog_by_slug")]
     public function postBySlug($slug)
     {
-        return new JsonResponse(
-            array_search($slug, array_column(self::POSTS, 'slug'))
+        return $this->json(
+            self::POSTS[array_search($slug, array_column(self::POSTS, 'slug'))]
         );
     }
 }
