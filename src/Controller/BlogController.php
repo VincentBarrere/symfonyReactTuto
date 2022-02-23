@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\BlogPost;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -28,7 +30,7 @@ class BlogController extends AbstractController
         ]
     ];
 
-    #[Route("/{page}", name: "blog_list", defaults: ["page" => 5])]
+    #[Route("/{page}", name: "blog_list", defaults: ["page" => 5], requirements: ["page" => "\d+"])]
     public function list($page)
     {
         return $this->json(
@@ -38,7 +40,7 @@ class BlogController extends AbstractController
             ]
         );
     }
-    #[Route("/post/{id}", name: "blog_by_id")]
+    #[Route("/post/{id}", name: "blog_by_id", requirements: ["id" => "\d+"])]
     public function post($id)
     {
         return $this->json(
@@ -51,5 +53,18 @@ class BlogController extends AbstractController
         return $this->json(
             self::POSTS[array_search($slug, array_column(self::POSTS, 'slug'))]
         );
+    }
+
+    #[Route("/add", name: "blog_add", methods: ["POST"])]
+    public function add(Request $request)
+    {
+        /**@var Serializer $serializer*/
+        $serializer = $this->query->get('serialiser');
+        $blogPost = $serializer->deserialise($request->getContent(), BlogPost::class, 'json');
+        $em = $this->query->getDoctrine()->getManager();
+        $em->persist($blogPost);
+        $em->flush();
+
+        return $this->json($blogPost);
     }
 }
